@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	gohandlers "github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"go_microservice/handlers"
 	"log"
@@ -17,6 +18,8 @@ func main() {
 	ph := handlers.NewProduct(l)
 
 	sm := mux.NewRouter()
+
+	cors := gohandlers.CORS(gohandlers.AllowedOrigins([]string{"*"}))
 	getRouter := sm.Methods(http.MethodGet).Subrouter()
 	getRouter.HandleFunc("/", ph.GetProducts)
 
@@ -33,13 +36,14 @@ func main() {
 
 	server := &http.Server{
 		Addr : ":9090",
-		Handler: sm,
+		Handler: cors(sm),
 		IdleTimeout: 120 * time.Second,
 		ReadTimeout: 1 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
 
 	go func(){
+		l.Println("Server is starting")
 		log.Fatal(server.ListenAndServe())
 	}()
 
